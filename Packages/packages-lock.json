@@ -1,5 +1,12 @@
 {
   "dependencies": {
+    "com.lugu.utils": {
+      "version": "https://github.com/LuguGMD/DebugConsole.git?path=/Packages/com.lugu.utils",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "bb32eb3755fa3d5b43dccc94dd46e7263b90ab63"
+    },
     "com.unity.ai.navigation": {
       "version": "2.0.5",
       "depth": 0,
