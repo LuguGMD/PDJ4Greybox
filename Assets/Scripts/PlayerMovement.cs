@@ -1,9 +1,12 @@
+using PDJ4.Observer;
+using Player.Strategy;
+using System;
 using UnityEngine;
 
-[RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(CharacterController), typeof(PlayerStrategyHandler))]
 public class PlayerMovement : MonoBehaviour
 {
-    private enum State
+    public enum State
     {
         Idle,
         Walking,
@@ -11,22 +14,13 @@ public class PlayerMovement : MonoBehaviour
         Falling,
         Climbing
     }
-
-    private enum Form
-    {
-        Solid,
-        Mud,
-        Transforming
-    }
-
     private State m_currentState = State.Idle;
-    private Form m_currentForm = Form.Solid;
+
+    [SerializeField] private PlayerStrategyHandler.Strategy m_startStrategy;
+    private PlayerStrategyScriptable m_currentStrategy;
 
     private CharacterController m_characterController;
 
-    [SerializeField] private float m_speed = 5f;
-    [SerializeField] private float m_jumpForce = 10f;
-    [SerializeField] private float m_jumpCancelFactor = 0;
     private Vector3 m_input;
     private bool m_canCancelJump = false;
     private bool m_isGrounded = false;
@@ -35,17 +29,19 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 m_force;
     private Vector3 m_direction;
 
-    [SerializeField] private float m_gravity = -9f;
-    [SerializeField] private float m_fallGravityFactor = 1.5f;
-
     [SerializeField] private InputInfo m_jumpInput;
     [SerializeField] private InputInfo m_transformInput;
 
-    [Header("Solid")]
-    [SerializeField] private float m_solidHeight;
+    //Strategy
+    private PlayerStrategyHandler m_strategyHandler;
 
-    [Header("Mud")]
-    [SerializeField] private float m_mudHeight;
+    private Action<PlayerMovement> JumpStrategy;
+    private Action<PlayerMovement> MoveStrategy;
+    private Action<PlayerMovement> TransformStrategy;
+    private Action<PlayerMovement> DirectionStrategy;
+    private Action<PlayerMovement> RotateStrategy;
+
+
 
     private float m_lastTimeOnGround;
 
@@ -54,18 +50,34 @@ public class PlayerMovement : MonoBehaviour
     public Vector3 force
     {
         get { return m_force; }
+        internal set { m_force = value; }
     }
 
     public Vector3 direction
     {
         get { return m_direction; }
+        internal set { m_direction = value; }
     }
+
+    public Vector3 input
+    {
+        get { return m_input; }
+        private set { m_input = value; }
+    }
+
+    public CharacterController characterController { get  { return m_characterController; } internal set { m_characterController = value; } }
+    public State currentState { get { return m_currentState; } internal set { m_currentState = value; } }
+
+    public bool isGrounded { get { return m_isGrounded; } }
 
     #endregion
 
     private void Awake()
     {
         m_characterController = GetComponent<CharacterController>();
+        m_strategyHandler = GetComponent<PlayerStrategyHandler>();
+
+        ChangeStrategy(m_startStrategy);
     }
 
     // Update is called once per frame
@@ -74,20 +86,7 @@ public class PlayerMovement : MonoBehaviour
         GetInputs();
         Move();
         Jump();
-        Rotate();
-
-        switch (m_currentForm)
-        {
-            case Form.Solid:
-                // Solid form logic
-                break;
-            case Form.Mud:
-                // Mud form logic
-                break;
-            case Form.Transforming:
-                // Transforming logic
-                break;
-        }
+        RotateStrategy?.Invoke(this);
     }
 
     private void LateUpdate()
@@ -97,53 +96,24 @@ public class PlayerMovement : MonoBehaviour
 
     private void Move()
     {
-        Vector3 forward = Camera.main.transform.forward;
-        forward.y = 0;
-        forward.Normalize();
-
-        Vector3 right = Camera.main.transform.right;
-        right.y = 0;
-        right.Normalize();
-
-        m_direction = forward * m_input.z + right * m_input.x;
-        Vector3 movement = m_direction * m_speed;
-        movement.y = m_gravity;
-
-        HandleGravity();
-
-        m_force.x = movement.x;
-        m_force.z = movement.z;
-
-        m_characterController.Move(m_force * Time.deltaTime);
+        DirectionStrategy?.Invoke(this);
+        MoveStrategy?.Invoke(this);
     }
 
-    private void Rotate()
-    {
-        if (m_direction != Vector3.zero)
-        {
-            
-
-            Quaternion toRotation = Quaternion.LookRotation(m_force, Vector3.up);
-            toRotation = Quaternion.Euler(0, toRotation.eulerAngles.y, 0);
-
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, 720 * Time.deltaTime);
-        }
-    }
-
-    private void HandleGravity()
+    internal void HandleGravity()
     {
         if (!m_isGrounded)
         {
-            float gravity = m_gravity;
+            float gravity = m_currentStrategy.gravity;
 
             if(m_force.y < 0)
             {
-                gravity *= m_fallGravityFactor;
+                gravity *= m_currentStrategy.fallGravityFactor;
             }
 
             if(!m_jumpInput.isPressed && m_force.y > 0 && m_canCancelJump)
             {
-                m_force.y *= m_jumpCancelFactor;
+                m_force.y *= m_currentStrategy.jumpCancelFactor;
                 m_canCancelJump = false;
             }
             else
@@ -165,7 +135,7 @@ public class PlayerMovement : MonoBehaviour
             if (m_jumpInput.isEnabled || coyoteTimeEnabled)
             {
                 m_canCancelJump = true;
-                m_force.y = m_jumpForce;
+                JumpStrategy?.Invoke(this);
                 m_canJump = false;
             }
             else if(!m_jumpInput.isPressed)
@@ -180,7 +150,15 @@ public class PlayerMovement : MonoBehaviour
         m_isGrounded = m_characterController.isGrounded;
         m_canJump = m_characterController.isGrounded;
 
-        if (m_isGrounded) m_force.y = 0;
+        if (m_isGrounded)
+        {
+            ChangeState(State.Idle);
+            m_force.y = 0;
+        }
+        else
+        {
+            ChangeState(State.Jumping);
+        }
     }
 
     private void GetInputs()
@@ -190,14 +168,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (m_transformInput.isDown)
         {
-            if (m_currentForm == Form.Solid)
-            {
-                ChangeForm(Form.Mud);
-            }
-            else if (m_currentForm == Form.Mud)
-            {
-                ChangeForm(Form.Solid);
-            }
+            TransformStrategy?.Invoke(this);
         }
 
             m_input.x = Input.GetAxis("Horizontal");
@@ -209,48 +180,25 @@ public class PlayerMovement : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
     }
 
-    private bool TransformValidation(Form nextForm)
+    internal void ChangeStrategy(PlayerStrategyHandler.Strategy nextStrategyEnum)
     {
-        switch(nextForm)
-        {
-            case Form.Solid:
+        m_currentStrategy = m_strategyHandler.ChangeStrategy(nextStrategyEnum);
 
-                Physics.Raycast(transform.position, Vector3.up, out RaycastHit hitInfo, m_solidHeight);
-                if (hitInfo.collider != null)
-                    return false;
+        m_characterController.height = m_currentStrategy.height;
 
-                break;
-            case Form.Mud:
-
-                
-
-                break;
-        }
-        return true;
+        JumpStrategy = m_currentStrategy.Jump;
+        MoveStrategy = m_currentStrategy.Move;
+        DirectionStrategy = m_currentStrategy.GetDirection;
+        TransformStrategy = m_currentStrategy.Transform;
+        RotateStrategy = m_currentStrategy.Rotate;
+    }
+    public PlayerStrategyScriptable GetStrategy(PlayerStrategyHandler.Strategy strategy)
+    {
+        return m_strategyHandler.ChangeStrategy(strategy);
+    }
+    private void ChangeState(State state)
+    {
+        m_currentState = state;
     }
 
-    private void ChangeForm(Form nextForm)
-    {
-        if (TransformValidation(nextForm))
-        {
-            m_currentForm = nextForm;
-
-            switch (m_currentForm)
-            {
-                case Form.Solid:
-                    m_characterController.height = m_solidHeight;
-                    m_speed = 10;
-                    break;
-                case Form.Mud:
-                    m_characterController.height = m_mudHeight;
-                    m_speed = 2;
-                    break;
-            }
-        }
-    }
-
-    private void ChangeState(State nextState)
-    {
-        m_currentState = nextState;
-    }
 }
