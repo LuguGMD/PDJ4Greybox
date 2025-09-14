@@ -1,4 +1,3 @@
-using PDJ4.Observer;
 using Player.Strategy;
 using System;
 using UnityEngine;
@@ -78,6 +77,7 @@ public class PlayerMovement : MonoBehaviour
         m_strategyHandler = GetComponent<PlayerStrategyHandler>();
 
         ChangeStrategy(m_startStrategy);
+        LockMouse();
     }
 
     // Update is called once per frame

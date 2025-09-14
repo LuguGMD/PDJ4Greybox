@@ -7,35 +7,19 @@ using UnityEngine;
 /// </summary>
 public class Obstacles : MonoBehaviour, IColliderEnterCollision
 {
-    public GameObject player;
     public LayerMask CollisionMask { get; set; }
     public HashSet<string> CollisionTags { get; set; }
-
-    public Vector3 playerStartPos;
-
-    void Start()
-    {
-        playerStartPos = player.transform.position;
-    }
 
     public void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
         {
             Debug.Log($"Teleporte solicitado. Antes={other.transform.position}");
-
-            CharacterController cc = other.GetComponent<CharacterController>();
-            if (cc != null)
+            if (other.TryGetComponent<PlayerSpawnpoint>(out PlayerSpawnpoint playerSpawnpoint))
             {
-                cc.enabled = false; 
-                other.transform.position = playerStartPos;
-                cc.enabled = true;  
+                playerSpawnpoint.ReturnToSpawnpoint();
+                GameManager.Instance.PlayerDied();
             }
-            else
-            {
-                other.transform.position = playerStartPos;
-            }
-
             Debug.Log($"Depois={other.transform.position}");
         }
     }
