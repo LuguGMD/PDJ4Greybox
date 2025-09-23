@@ -971,10 +971,10 @@ MonoBehaviour:
     m_inputKeyCode: 0
     m_bufferTime: 0.1
     m_delayTime: 0.1
-  m_transformInput:
+  m_skillInput:
     m_type: 0
     m_inputName: 
-    m_inputKeyCode: 9
+    m_inputKeyCode: 304
     m_bufferTime: 0.1
     m_delayTime: 0.1
 --- !u!114 &8771128677574928767
@@ -990,8 +990,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _playerStrategies:
-  - {fileID: 11400000, guid: bcd816e5023d2294596fee7745568838, type: 2}
-  - {fileID: 11400000, guid: 9c9bad2f866840c47af85aa88fbfb7b6, type: 2}
+  - {fileID: 11400000, guid: 12c6e5873acbbf84fa7e5b8465f30a67, type: 2}
+  - {fileID: 11400000, guid: 9edb28dd52619094da250a93ebb7ced7, type: 2}
+  - {fileID: 11400000, guid: 13d60106c1670ba4e8f3b1d2f659ded2, type: 2}
+  - {fileID: 11400000, guid: ed69bddb8bd92ed4e916b4e85e7bbb3d, type: 2}
+  - {fileID: 11400000, guid: 44cc3535065249f45926597aa8487fb6, type: 2}
+  - {fileID: 11400000, guid: 5c1969723b0a9264c9ea79a95d5e96ab, type: 2}
+  - {fileID: 11400000, guid: 76a5b72348ab70c49a1935b407bb718d, type: 2}
 --- !u!114 &4694597434274877765
 MonoBehaviour:
   m_ObjectHideFlags: 0

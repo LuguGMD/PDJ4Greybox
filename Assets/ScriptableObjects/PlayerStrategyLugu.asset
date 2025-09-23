@@ -9,12 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5b13dac450e41004ca3664be17c82cc7, type: 3}
-  m_Name: PlayerSolidStrategy
+  m_Script: {fileID: 11500000, guid: c20cabc6c0d8d4946b5b456824de4ba0, type: 3}
+  m_Name: PlayerStrategyLugu
   m_EditorClassIdentifier: 
   _speed: 8
   _jumpForce: 10
   _jumpCancelFactor: 0
   _gravity: -20
   _fallGravityFactor: 3
-  _height: 2

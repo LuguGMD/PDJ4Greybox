@@ -29,16 +29,16 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 m_direction;
 
     [SerializeField] private InputInfo m_jumpInput;
-    [SerializeField] private InputInfo m_transformInput;
+    [SerializeField] private InputInfo m_skillInput;
 
     //Strategy
     private PlayerStrategyHandler m_strategyHandler;
 
     private Action<PlayerMovement> JumpStrategy;
     private Action<PlayerMovement> MoveStrategy;
-    private Action<PlayerMovement> TransformStrategy;
     private Action<PlayerMovement> DirectionStrategy;
     private Action<PlayerMovement> RotateStrategy;
+    private Action<PlayerMovement> SkillStrategy;
 
 
 
@@ -76,7 +76,7 @@ public class PlayerMovement : MonoBehaviour
         m_characterController = GetComponent<CharacterController>();
         m_strategyHandler = GetComponent<PlayerStrategyHandler>();
 
-        ChangeStrategy(m_startStrategy);
+        StartStrategy();
         LockMouse();
     }
 
@@ -87,6 +87,8 @@ public class PlayerMovement : MonoBehaviour
         Move();
         Jump();
         RotateStrategy?.Invoke(this);
+
+        m_currentStrategy.UpdateStrategy(this);
     }
 
     private void LateUpdate()
@@ -98,6 +100,8 @@ public class PlayerMovement : MonoBehaviour
     {
         DirectionStrategy?.Invoke(this);
         MoveStrategy?.Invoke(this);
+
+        characterController.Move(m_force * Time.deltaTime);
     }
 
     internal void HandleGravity()
@@ -164,11 +168,11 @@ public class PlayerMovement : MonoBehaviour
     private void GetInputs()
     {
         m_jumpInput.GetInput();
-        m_transformInput.GetInput();
+        m_skillInput.GetInput();
 
-        if (m_transformInput.isDown)
+        if (m_skillInput.isDown)
         {
-            TransformStrategy?.Invoke(this);
+            SkillStrategy?.Invoke(this);
         }
 
             m_input.x = Input.GetAxis("Horizontal");
@@ -182,15 +186,36 @@ public class PlayerMovement : MonoBehaviour
 
     internal void ChangeStrategy(PlayerStrategyHandler.Strategy nextStrategyEnum)
     {
+        JumpStrategy -= m_currentStrategy.Jump;
+        MoveStrategy -= m_currentStrategy.Move;
+        DirectionStrategy -= m_currentStrategy.GetDirection;
+        SkillStrategy -= m_currentStrategy.Skill;
+        RotateStrategy -= m_currentStrategy.Rotate;
+
+        m_currentStrategy.ExitStrategy(this);
+
+
         m_currentStrategy = m_strategyHandler.ChangeStrategy(nextStrategyEnum);
 
-        m_characterController.height = m_currentStrategy.height;
+        m_currentStrategy.EnterStrategy(this);
 
-        JumpStrategy = m_currentStrategy.Jump;
-        MoveStrategy = m_currentStrategy.Move;
-        DirectionStrategy = m_currentStrategy.GetDirection;
-        TransformStrategy = m_currentStrategy.Transform;
-        RotateStrategy = m_currentStrategy.Rotate;
+        JumpStrategy += m_currentStrategy.Jump;
+        MoveStrategy += m_currentStrategy.Move;
+        DirectionStrategy += m_currentStrategy.GetDirection;
+        SkillStrategy += m_currentStrategy.Skill;
+        RotateStrategy += m_currentStrategy.Rotate;
+    }
+    private void StartStrategy()
+    {
+        m_currentStrategy = m_strategyHandler.ChangeStrategy(m_startStrategy);
+
+        m_currentStrategy.EnterStrategy(this);
+
+        JumpStrategy += m_currentStrategy.Jump;
+        MoveStrategy += m_currentStrategy.Move;
+        DirectionStrategy += m_currentStrategy.GetDirection;
+        SkillStrategy += m_currentStrategy.Skill;
+        RotateStrategy += m_currentStrategy.Rotate;
     }
     public PlayerStrategyScriptable GetStrategy(PlayerStrategyHandler.Strategy strategy)
     {
