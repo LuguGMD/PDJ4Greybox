@@ -25,7 +25,7 @@ public class StrategyChanger : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            PlayerStrategyHandler playerStrategyHandler = other.GetComponent<PlayerStrategyHandler>();
+            PlayerMovement playerStrategyHandler = other.GetComponent<PlayerMovement>();
             if (playerStrategyHandler != null)
             {
                 playerStrategyHandler.ChangeStrategy(_strategy);
