@@ -7,8 +7,13 @@ namespace Player.Strategy
     {
         public enum Strategy
         { 
-            Solid,
-            Mud
+            Lugu,
+            Luke,
+            Lucca,
+            Amanda,
+            Rodrigo,
+            Rori,
+            Roque
         }
 
         [SerializeField] private List<PlayerStrategyScriptable> _playerStrategies = new List<PlayerStrategyScriptable>();
