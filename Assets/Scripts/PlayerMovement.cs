@@ -1,6 +1,8 @@
+using Player;
 using Player.Strategy;
 using System;
 using UnityEngine;
+using UnityEngine.Windows;
 
 [RequireComponent(typeof(CharacterController), typeof(PlayerStrategyHandler))]
 public class PlayerMovement : MonoBehaviour
@@ -27,9 +29,6 @@ public class PlayerMovement : MonoBehaviour
 
     private Vector3 m_force;
     private Vector3 m_direction;
-
-    [SerializeField] private InputInfo m_jumpInput;
-    [SerializeField] private InputInfo m_skillInput;
 
     //Strategy
     private PlayerStrategyHandler m_strategyHandler;
@@ -83,9 +82,7 @@ public class PlayerMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        GetInputs();
         Move();
-        Jump();
         RotateStrategy?.Invoke(this);
 
         m_currentStrategy.UpdateStrategy(this);
@@ -98,6 +95,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void Move()
     {
+        HandleGravity();
+
         DirectionStrategy?.Invoke(this);
         MoveStrategy?.Invoke(this);
 
@@ -106,46 +105,18 @@ public class PlayerMovement : MonoBehaviour
 
     internal void HandleGravity()
     {
-        if (!m_isGrounded)
+        float gravity = m_currentStrategy.gravity;
+
+        if (m_force.y < 0)
         {
-            float gravity = m_currentStrategy.gravity;
-
-            if(m_force.y < 0)
-            {
-                gravity *= m_currentStrategy.fallGravityFactor;
-            }
-
-            if(!m_jumpInput.isPressed && m_force.y > 0 && m_canCancelJump)
-            {
-                m_force.y *= m_currentStrategy.jumpCancelFactor;
-                m_canCancelJump = false;
-            }
-            else
-            {
-                m_force.y += gravity * Time.deltaTime;
-            }
+            gravity *= m_currentStrategy.fallGravityFactor;
         }
-        else if(m_isGrounded)
+
+        m_force.y += gravity * Time.deltaTime;
+
+        if (m_isGrounded)
         {
             m_lastTimeOnGround = Time.time;
-        }
-    }
-
-    private void Jump()
-    {
-        bool coyoteTimeEnabled = m_jumpInput.GetDelayInput(m_lastTimeOnGround);
-        if ((m_isGrounded || coyoteTimeEnabled) && m_canJump)
-        {
-            if (m_jumpInput.isEnabled || coyoteTimeEnabled)
-            {
-                m_canCancelJump = true;
-                JumpStrategy?.Invoke(this);
-                m_canJump = false;
-            }
-            else if(!m_jumpInput.isPressed)
-            {
-                m_canCancelJump = false;
-            }
         }
     }
 
@@ -165,18 +136,42 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private void GetInputs()
+    public void GetDirectionInput(Vector3 direction)
     {
-        m_jumpInput.GetInput();
-        m_skillInput.GetInput();
+        m_input.x = direction.x;
+        m_input.z = direction.z;
+    }
 
-        if (m_skillInput.isDown)
+    public void GetJumpInput(InputInfo input)
+    {
+        if (!input.IsPressed && m_force.y > 0 && m_canCancelJump)
+        {
+            m_force.y *= m_currentStrategy.jumpCancelFactor;
+            m_canCancelJump = false;
+        }
+
+        bool coyoteTimeEnabled = input.GetDelayInput(m_lastTimeOnGround);
+        if ((m_isGrounded || coyoteTimeEnabled) && m_canJump)
+        {
+            if (input.IsEnabled || coyoteTimeEnabled)
+            {
+                m_canCancelJump = true;
+                JumpStrategy?.Invoke(this);
+                m_canJump = false;
+            }
+            else if (!input.IsPressed)
+            {
+                m_canCancelJump = false;
+            }
+        }
+    }
+
+    public void GetSkillInput(InputInfo input)
+    {
+        if (input.IsDown)
         {
             SkillStrategy?.Invoke(this);
         }
-
-            m_input.x = Input.GetAxis("Horizontal");
-        m_input.z = Input.GetAxis("Vertical");
     }
 
     public void LockMouse()

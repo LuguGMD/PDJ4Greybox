@@ -35,8 +35,6 @@ namespace Player.Strategy
             Vector3 movement = player.direction * _speed;
             movement.y = _gravity;
 
-            player.HandleGravity();
-
             player.force = new Vector3(movement.x, player.force.y, movement.z);
         }
         public virtual void GetDirection(PlayerMovement player)
@@ -62,7 +60,7 @@ namespace Player.Strategy
         }
         public virtual void Skill(PlayerMovement player) 
         {
-            
+
         }
 
         public virtual void EnterStrategy(PlayerMovement player)

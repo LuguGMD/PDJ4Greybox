@@ -1,121 +1,105 @@
+using System;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [System.Serializable]
 public class InputInfo
 {
-    public enum Type
-    {
-        KeyCode,
-        Button,
-        NewInput
-    }
+    [SerializeField] private float _bufferTime;
+    [SerializeField] private float _delayTime;
 
-    [SerializeField] private Type m_type;
-    [SerializeField] private string m_inputName;
-    [SerializeField] private KeyCode m_inputKeyCode;
+    private float _lastInput;
 
-    [SerializeField] private float m_bufferTime;
-    [SerializeField] private float m_delayTime;
+    private bool _isEnabled;
 
-    private float m_lastInput;
+    private bool _isPressed;
+    private bool _isUp;
+    private bool _isDown;
 
-    //Returns
-    private bool m_isEnabled;
+    private bool _isDelayInput;
 
-    private bool m_isPressed;
-    private bool m_isUp;
-    private bool m_isDown;
+    private Awaitable _inputBufferAwaitable;
 
     #region Properties
 
-    public Type type
+    public float LastInput
     {
-        get { return m_type; }
+        get { return _lastInput; }
     }
 
-    public float lastInput
+    public float BufferTime
     {
-        get { return m_lastInput; }
+        get { return _bufferTime; }
     }
 
-    public float bufferTime
+    public float DelayTime
     {
-        get { return m_bufferTime; }
+        get { return _delayTime; }
     }
 
-    public float delayTime
+    public bool IsEnabled
     {
-        get { return m_delayTime; }
+        get { return _isEnabled; }
     }
 
-    public bool isEnabled
+    public bool IsPressed
     {
-        get { return m_isEnabled; }
+        get { return _isPressed; }
     }
 
-    public bool isPressed
+    public bool IsUp
     {
-        get { return m_isPressed; }
+        get { return _isUp; }
     }
 
-    public bool isUp
+    public bool IsDown
     {
-        get { return m_isUp; }
+        get { return _isDown; }
     }
 
-    public bool isDown
+    public bool IsDelayInput
     {
-        get { return m_isDown; }
+        get { return _isDelayInput; }
     }
+
+    public Action<InputInfo> OnInput;
 
     #endregion
 
-    public InputInfo(Type type, float bufferTime = 0.2f, float delayTime = 0.2f, string inputName = "Horizontal", KeyCode keycode = KeyCode.None)
+    public InputInfo(float bufferTime = 0.2f, float delayTime = 0.2f)
     {
-        m_type = type;
-        m_bufferTime = bufferTime;
-        m_delayTime = delayTime;
-        m_inputName = inputName;
-        m_inputKeyCode = keycode;
+        _bufferTime = bufferTime;
+        _delayTime = delayTime;
 
-        m_lastInput = -1;
+        _lastInput = -1;
     }
 
-    public void GetInput()
+    public void GetInput(InputAction.CallbackContext context)
     {
-        m_isPressed = false;
-        m_isUp = false;
-        m_isDown = false;
+        _isPressed = !context.canceled;
+        _isUp = context.canceled;
+        _isDown = !context.canceled && !_isDown;
 
-        switch (m_type)
+        if (_isDown)
         {
-            case Type.Button:
-                m_isPressed = Input.GetButton(m_inputName);
-                m_isUp = Input.GetButtonUp(m_inputName);
-                m_isDown = Input.GetButtonDown(m_inputName);
-                break;
-            case Type.NewInput:
-                
-                break;
-            case Type.KeyCode:
-                m_isPressed = Input.GetKey(m_inputKeyCode);
-                m_isUp = Input.GetKeyUp(m_inputKeyCode);
-                m_isDown = Input.GetKeyDown(m_inputKeyCode);
-                break;
+            _lastInput = Time.time;
+            if (_inputBufferAwaitable != null) _inputBufferAwaitable.Cancel();
+            _inputBufferAwaitable = BufferInput();
         }
 
-        if(m_isDown)
-        {
-            m_lastInput = Time.time;
-        }
-
-        m_isEnabled = Time.time < m_lastInput + m_bufferTime;
+        OnInput?.Invoke(this);
 
     }
 
     public bool GetDelayInput(float time)
     {
-        GetInput();
-        return Time.time < time + m_delayTime && m_isDown;
+        return Time.time <= time + _delayTime && _isDown;
+    }
+
+    private async Awaitable BufferInput()
+    {
+        _isEnabled = true;
+        await Awaitable.WaitForSecondsAsync(_bufferTime);
+        _isEnabled = false;
     }
 }
