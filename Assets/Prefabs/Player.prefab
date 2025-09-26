@@ -980,13 +980,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _playerStrategies:
-  - {fileID: 11400000, guid: 12c6e5873acbbf84fa7e5b8465f30a67, type: 2}
-  - {fileID: 11400000, guid: 9edb28dd52619094da250a93ebb7ced7, type: 2}
   - {fileID: 11400000, guid: 13d60106c1670ba4e8f3b1d2f659ded2, type: 2}
   - {fileID: 11400000, guid: ed69bddb8bd92ed4e916b4e85e7bbb3d, type: 2}
+  - {fileID: 11400000, guid: 9edb28dd52619094da250a93ebb7ced7, type: 2}
+  - {fileID: 11400000, guid: 12c6e5873acbbf84fa7e5b8465f30a67, type: 2}
   - {fileID: 11400000, guid: 44cc3535065249f45926597aa8487fb6, type: 2}
-  - {fileID: 11400000, guid: 5c1969723b0a9264c9ea79a95d5e96ab, type: 2}
   - {fileID: 11400000, guid: 76a5b72348ab70c49a1935b407bb718d, type: 2}
+  - {fileID: 11400000, guid: 5c1969723b0a9264c9ea79a95d5e96ab, type: 2}
 --- !u!114 &4694597434274877765
 MonoBehaviour:
   m_ObjectHideFlags: 0
