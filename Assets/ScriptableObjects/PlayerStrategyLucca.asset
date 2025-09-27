@@ -12,8 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4145f918ee15ff24ba2ecea85b166bb1, type: 3}
   m_Name: PlayerStrategyLucca
   m_EditorClassIdentifier: 
-  _speed: 8
+  _speed: 15
   _jumpForce: 10
   _jumpCancelFactor: 0
   _gravity: -20
   _fallGravityFactor: 3
+  _dashDistance: 5
+  _dashDuration: 0.1
+  _dashCooldown: 0.3
