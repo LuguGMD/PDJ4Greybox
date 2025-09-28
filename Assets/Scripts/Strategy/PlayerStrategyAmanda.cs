@@ -8,6 +8,7 @@ namespace Player.Strategy
         private PlayerStrategyHandler.Strategy m_strategy = PlayerStrategyHandler.Strategy.Amanda;
         public override PlayerStrategyHandler.Strategy strategy { get => m_strategy; protected set { m_strategy = value; } }
 
+
         public override void Jump(PlayerMovement player)
         {
             base.Jump(player);
@@ -37,6 +38,25 @@ namespace Player.Strategy
         public override void UpdateStrategy(PlayerMovement player)
         {
             base.UpdateStrategy(player);
+
+            bool isFalling = player.force.y < 0;
+            bool isGrounded = player.isGrounded;
+
+            if (!isGrounded && isFalling)
+            {
+                if (Input.GetKey(KeyCode.G))
+                {
+                    _fallGravityFactor = 0.1f;
+                }
+                else
+                {
+                    _fallGravityFactor = 3f;
+                }
+                
+                Vector3 force = player.force;
+                force.y += Physics.gravity.y * _fallGravityFactor * Time.deltaTime;
+                player.force = force;
+            }
         }
 
         public override void ExitStrategy(PlayerMovement player)

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6db7eeb837eb7c846a424a148026f316, type: 3}
   m_Name: PlayerStrategyAmanda
   m_EditorClassIdentifier: 
-  _speed: 8
+  _speed: 15
   _jumpForce: 10
   _jumpCancelFactor: 0
   _gravity: -20
