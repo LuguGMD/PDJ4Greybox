@@ -144,6 +144,7 @@ public class PlayerMovement : MonoBehaviour
 
     public void GetJumpInput(InputInfo input)
     {
+        // Lógica de cancelamento de pulo (Inalterada)
         if (!input.IsPressed && m_force.y > 0 && m_canCancelJump)
         {
             m_force.y *= m_currentStrategy.jumpCancelFactor;
@@ -151,6 +152,8 @@ public class PlayerMovement : MonoBehaviour
         }
 
         bool coyoteTimeEnabled = input.GetDelayInput(m_lastTimeOnGround);
+
+        // PRIMEIRO PULO: Lógica padrão de chão / coyote time
         if ((m_isGrounded || coyoteTimeEnabled) && m_canJump)
         {
             if (input.IsEnabled || coyoteTimeEnabled)
@@ -163,6 +166,12 @@ public class PlayerMovement : MonoBehaviour
             {
                 m_canCancelJump = false;
             }
+        }
+        // SEGUNDO PULO (CORREÇÃO): Permite chamar o Jump da estratégia no ar SOMENTE se a estratégia for "Luke".
+        else if (input.IsDown && m_currentStrategy.strategy == PlayerStrategyHandler.Strategy.Luke) 
+        {
+            m_canCancelJump = true; 
+            JumpStrategy?.Invoke(this); 
         }
     }
 
