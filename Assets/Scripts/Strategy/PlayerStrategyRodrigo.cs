@@ -1,4 +1,6 @@
+using Unity.Cinemachine;
 using UnityEngine;
+using static UnityEditor.Experimental.GraphView.GraphView;
 
 
 namespace Player.Strategy
@@ -7,7 +9,8 @@ namespace Player.Strategy
     public class PlayerStrategyRodrigo : PlayerStrategyScriptable
     {
         private PlayerStrategyHandler.Strategy m_strategy = PlayerStrategyHandler.Strategy.Rodrigo;
-        private bool isGrabing = false;
+        //private float graplingCooldownTimer;
+        //private float maxGrapplingDistance
         public override PlayerStrategyHandler.Strategy strategy { get => m_strategy; protected set { m_strategy = value; } }
 
         public override void Jump(PlayerMovement player)
@@ -30,25 +33,26 @@ namespace Player.Strategy
         {
             RaycastHit hit;
 
-            Vector3 RayInitPos = new Vector3(player.gameObject.transform.position.x, player.gameObject.transform.position.y + 1.5f, player.gameObject.transform.position.z);
-            
-            if (Physics.Raycast(RayInitPos, player.gameObject.transform.forward, out hit, 2f))
+            if(Cursor.lockState != CursorLockMode.None)
             {
-                if (hit.transform.CompareTag("Grabbable") && !isGrabing)
-                {
-                    isGrabing = true;
-                    hit.transform.SetParent(player.gameObject.transform);
-                    hit.transform.gameObject.GetComponent<Rigidbody>().useGravity = false;
-                }
-                else
-                {
-                    hit.transform.SetParent(null);
-                    hit.transform.gameObject.GetComponent<Rigidbody>().useGravity = true;
-                    isGrabing = false;
-                }
-
+                Cursor.lockState = CursorLockMode.None;
+                Camera.main.GetComponent<CinemachineBrain>().enabled = false;
+                player.gameObject.GetComponent<CharacterController>().enabled = false;
+                player.gameObject.GetComponent<Animator>().enabled = false;
             }
-
+            else
+            {
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                
+                if (Physics.Raycast(ray, out hit)) 
+                {
+                    player.transform.position = hit.point;
+                    player.gameObject.GetComponent<CharacterController>().enabled = true;
+                    player.gameObject.GetComponent<Animator>().enabled = true;
+                    Camera.main.GetComponent<CinemachineBrain>().enabled = true;
+                    Cursor.lockState = CursorLockMode.Locked;
+                }
+            }
         }
 
         public override void EnterStrategy(PlayerMovement player)
