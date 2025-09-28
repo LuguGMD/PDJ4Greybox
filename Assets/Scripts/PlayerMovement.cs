@@ -220,5 +220,6 @@ public class PlayerMovement : MonoBehaviour
     {
         m_currentState = state;
     }
-
+    public float radius;
+    void OnDrawGizmos() { Gizmos.DrawSphere(this.transform.position, 3f); }
 }
