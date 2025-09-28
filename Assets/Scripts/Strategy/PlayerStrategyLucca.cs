@@ -38,10 +38,7 @@ namespace Player.Strategy
             }
             else
             {
-                Vector3 movement = player.direction * _speed;
-                movement.y = _gravity;
-
-                player.force = new Vector3(movement.x, player.force.y, movement.z);
+                base.Move(player);
             }
             dashTimer += Time.deltaTime;
         }
